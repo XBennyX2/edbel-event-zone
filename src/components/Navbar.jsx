@@ -14,11 +14,12 @@ export default function Navbar({ onOpenBooking }) {
   }, []);
 
   const navLinks = [
+    { name: 'Concepts', href: '#concepts' },
     { name: 'Works', href: '#portfolio' },
     { name: 'Services', href: '#services' },
-    { name: 'Editorial Story', href: '#about' },
-    { name: 'Philosophy', href: '#why-us' },
-    { name: 'Client Words', href: '#testimonials' },
+    { name: 'Story', href: '#about' },
+    { name: 'Standards', href: '#why-us' },
+    { name: 'Reviews', href: '#testimonials' },
     { name: 'Inquiries', href: '#contact' },
   ];
 

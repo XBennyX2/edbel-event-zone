@@ -3,6 +3,7 @@ import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import About from './components/About';
 import Services from './components/Services';
+import MoodboardVisualizer from './components/MoodboardVisualizer';
 import Portfolio from './components/Portfolio';
 import WhyChooseUs from './components/WhyChooseUs';
 import Process from './components/Process';
@@ -10,6 +11,7 @@ import Testimonials from './components/Testimonials';
 import BookingSection from './components/BookingSection';
 import Footer from './components/Footer';
 import WhatsAppFloating from './components/WhatsAppFloating';
+import AmbientTwinkle from './components/AmbientTwinkle';
 
 export default function App() {
   const [selectedStyle, setSelectedStyle] = useState('');
@@ -30,12 +32,15 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-noir-950 text-stone-100 flex flex-col selection:bg-brand-500 selection:text-white">
+    <div className="relative min-h-screen bg-noir-950 text-stone-100 flex flex-col selection:bg-brand-500 selection:text-white">
+      {/* Subtle floating gold bokeh twinkle */}
+      <AmbientTwinkle />
+
       {/* Sticky Header */}
       <Navbar onOpenBooking={handleOpenBooking} />
 
-      {/* Hero Section */}
-      <main className="flex-1">
+      {/* Main Experience */}
+      <main className="flex-1 relative z-10">
         <Hero onOpenBooking={handleOpenBooking} />
         
         {/* About Us */}
@@ -43,6 +48,9 @@ export default function App() {
 
         {/* Our Services */}
         <Services onSelectService={handleBookStyle} />
+
+        {/* Interactive Concept Visualizer / Moodboards */}
+        <MoodboardVisualizer onSelectConcept={handleBookStyle} />
 
         {/* Portfolio / Previous Works */}
         <Portfolio onBookStyle={handleBookStyle} />
