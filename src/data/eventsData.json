@@ -162,8 +162,8 @@
       "Chandeliers",
       "Wedding Tent"
     ],
-    "width": 982,
-    "height": 1920
+    "width": 886,
+    "height": 1635
   },
   {
     "id": "edbel-evt-9",
@@ -182,8 +182,8 @@
       "Dusty Rose",
       "Tent Wedding"
     ],
-    "width": 982,
-    "height": 1920
+    "width": 883,
+    "height": 1204
   },
   {
     "id": "edbel-evt-10",
@@ -428,8 +428,8 @@
       "Elder Throne",
       "Cultural Engagement"
     ],
-    "width": 992,
-    "height": 1920
+    "width": 954,
+    "height": 1290
   },
   {
     "id": "edbel-evt-22",
@@ -468,8 +468,8 @@
       "Velvet Couch",
       "Floral Pillars"
     ],
-    "width": 982,
-    "height": 1920
+    "width": 783,
+    "height": 1443
   },
   {
     "id": "edbel-evt-24",
@@ -481,7 +481,7 @@
     "image": "/assets/images/events/event_24_engagements.jpg",
     "thumb": "/assets/images/events/thumb_24_engagements.jpg",
     "originalFile": "photo_22_2026-11-12_11-43-49.jpg",
-    "orientation": "portrait",
+    "orientation": "landscape",
     "featured": true,
     "tags": [
       "ሽምግልና",
@@ -490,7 +490,7 @@
       "Ethiopian Tradition"
     ],
     "width": 576,
-    "height": 1090
+    "height": 516
   },
   {
     "id": "edbel-evt-25",
@@ -502,7 +502,7 @@
     "image": "/assets/images/events/event_25_engagements.jpg",
     "thumb": "/assets/images/events/thumb_25_engagements.jpg",
     "originalFile": "photo_23_2026-11-12_11-43-49.jpg",
-    "orientation": "portrait",
+    "orientation": "landscape",
     "featured": false,
     "tags": [
       "ሽምግልና",
@@ -510,7 +510,7 @@
       "Illuminated Lamps"
     ],
     "width": 576,
-    "height": 1090
+    "height": 440
   },
   {
     "id": "edbel-evt-26",
@@ -612,8 +612,8 @@
       "Blush Pink",
       "Cross Neon"
     ],
-    "width": 591,
-    "height": 1104
+    "width": 537,
+    "height": 717
   },
   {
     "id": "edbel-evt-31",
@@ -921,8 +921,8 @@
       "Mortarboard Neon",
       "Milestone"
     ],
-    "width": 982,
-    "height": 1920
+    "width": 851,
+    "height": 1253
   },
   {
     "id": "edbel-evt-46",
@@ -941,8 +941,8 @@
       "Champagne Gold",
       "Fluted Velvet Sofa"
     ],
-    "width": 982,
-    "height": 1920
+    "width": 899,
+    "height": 1674
   },
   {
     "id": "edbel-evt-47",
@@ -995,7 +995,7 @@
     "image": "/assets/images/events/event_49_corporate_milestones.jpg",
     "thumb": "/assets/images/events/thumb_49_corporate_milestones.jpg",
     "originalFile": "photo_21_2026-11-12_11-43-49.jpg",
-    "orientation": "portrait",
+    "orientation": "square",
     "featured": false,
     "tags": [
       "Bride to Be",
@@ -1004,7 +1004,7 @@
       "Marquee"
     ],
     "width": 576,
-    "height": 1090
+    "height": 584
   },
   {
     "id": "edbel-evt-50",

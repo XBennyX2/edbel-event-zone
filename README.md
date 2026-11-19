@@ -16,16 +16,18 @@ Built entirely from scratch, the application showcases **51 verified, authentic 
 
 ## 💎 Brand & Visual Identity
 
+A light, quiet layout so the event photos carry the color. Design tokens live in `tailwind.config.js`.
+
 - **Color Palette:**
-  - *Warm Gold:* `#BA8733`, `#C5A059`, `#FDFBF7`
-  - *Obsidian & Noir:* `#0B0D11`, `#11141A`, `#161B22`
-  - *Champagne Accents:* `#FAF8F5`, `#EADEC5`
+  - *Surfaces:* white `#FFFFFF`, mist `#F4F6F2`, hairlines `#DDE2DB`
+  - *Text:* ink `#18231D`, body `#48554D`
+  - *Accent:* leaf green `#1E4A38` (the velvet drapes and turf in Edbel's own setups)
+  - *Logo gold:* `#B9AA74`, used sparingly
 - **Typography:**
-  - *Editorial Headings:* `Playfair Display` (Serif)
-  - *Interface & Body:* `Plus Jakarta Sans`
-  - *Ethiopian Cultural Heritage:* `Noto Serif Ethiopic` / `Nyala`
-- **Official Brand Mark:**
-  - Extracted transparent flower blossom emblem featuring the woman's profile silhouette, custom Amharic calligraphy `ኤድቤል`, and clean `EVENT ZONE` typography.
+  - *Headings & body:* `Jost` (echoes the geometric lettering in the logo)
+  - *Amharic:* `Noto Sans Ethiopic`
+- **Signature shape:** three arch-topped photos in the hero, after the triple-arch stages Edbel builds.
+- **Logo files** (`public/assets/images/branding/`): `edbel-logo-ink.png` for light backgrounds, `edbel-logo-light.png` for dark ones.
 
 ---
 
@@ -52,27 +54,24 @@ Built entirely from scratch, the application showcases **51 verified, authentic 
 
 ## 🚀 Key Website Features
 
-- **Hero Slideshow:** 5 auto-rotating high-impact slides with pause-on-hover and manual controls.
-- **51-Item Filterable Portfolio:** Filter by event category or search in real time by floral elements, themes, and keywords.
-- **Click-to-View Lightbox Modal:** Full-screen zoom, keyboard navigation (left/right/escape), orientation-aware layout, and direct *"Inquire This Exact Look"* integration.
-- **Interactive Event Inquiry & Booking Form:**
-  - Client Name, Phone, Email, Event Type, Date, Location, Budget Tier, Notes.
-  - Client-side validation with inline error feedback.
-  - Confetti celebration upon completion.
-  - 1-Click WhatsApp export with pre-filled message formatted for `+251 91 390 4484`.
-  - LocalStorage persistence.
-- **Floating WhatsApp Quick-Connect Widget:** Accessible across all screens.
-- **Fully Responsive:** Optimized for mobile, tablet, laptop, and ultra-wide desktop monitors.
+- **Hero:** plain headline, two actions (get a quote, see our work) and the phone number.
+- **Services:** six event types; choosing one filters the gallery to that type.
+- **51-Photo Gallery:** filter by event type; photos keep their real shape in a masonry layout.
+- **Lightbox:** larger photo with its description, keyboard navigation (left/right/escape), and "Ask about this look", which carries the photo title into the quote form.
+- **Quote Form:** name, phone, event type, date, venue and notes. The site has no server, so submitting opens WhatsApp with the details filled in for `+251 91 390 4484`.
+- **Floating WhatsApp button** on every screen.
+- **Responsive and accessible:** works from phone to desktop, with visible keyboard focus, labelled form fields and reduced-motion support.
+
+Contact details and the list of event types are kept in one place: `src/data/contact.js`.
 
 ---
 
 ## 🛠 Tech Stack
 
 - **Framework:** React 19 + Vite 6
-- **Styling:** Tailwind CSS 3.4 with custom glassmorphism and gold gradients
+- **Styling:** Tailwind CSS 3.4
 - **Icons:** Lucide React
-- **Animations & Effects:** Custom CSS keyframes + Canvas Confetti
-- **Image Pipeline:** Python Pillow optimization (cropping status bar borders, compressing for web while maintaining pristine 1080p/1920p quality)
+- **Image Pipeline:** Python Pillow optimization (cropping status bar borders, compressing for web)
 
 ---
 

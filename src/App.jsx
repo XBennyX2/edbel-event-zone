@@ -1,80 +1,57 @@
 import React, { useState } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
-import About from './components/About';
 import Services from './components/Services';
-import MoodboardVisualizer from './components/MoodboardVisualizer';
 import Portfolio from './components/Portfolio';
-import WhyChooseUs from './components/WhyChooseUs';
+import About from './components/About';
 import Process from './components/Process';
 import Testimonials from './components/Testimonials';
 import BookingSection from './components/BookingSection';
 import Footer from './components/Footer';
 import WhatsAppFloating from './components/WhatsAppFloating';
-import AmbientTwinkle from './components/AmbientTwinkle';
+
+function scrollToSection(id) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+}
 
 export default function App() {
+  // Which gallery filter is active. Lives here so a service card can set it.
+  const [category, setCategory] = useState('all');
+  // The photo or style a visitor asked about, carried into the contact form.
   const [selectedStyle, setSelectedStyle] = useState('');
 
-  const handleOpenBooking = () => {
-    const contactElem = document.getElementById('contact');
-    if (contactElem) {
-      contactElem.scrollIntoView({ behavior: 'smooth' });
-    }
+  const handleViewCategory = (categoryId) => {
+    setCategory(categoryId);
+    scrollToSection('work');
   };
 
-  const handleBookStyle = (styleTitle) => {
+  const handleAskAbout = (styleTitle) => {
     setSelectedStyle(styleTitle);
-    const contactElem = document.getElementById('contact');
-    if (contactElem) {
-      contactElem.scrollIntoView({ behavior: 'smooth' });
-    }
+    scrollToSection('contact');
   };
 
   return (
-    <div className="relative min-h-screen bg-noir-950 text-stone-100 flex flex-col selection:bg-brand-500 selection:text-white">
-      {/* Subtle floating gold bokeh twinkle */}
-      <AmbientTwinkle />
+    <div className="flex min-h-screen flex-col">
+      <Navbar />
 
-      {/* Sticky Header */}
-      <Navbar onOpenBooking={handleOpenBooking} />
-
-      {/* Main Experience */}
-      <main className="flex-1 relative z-10">
-        <Hero onOpenBooking={handleOpenBooking} />
-        
-        {/* About Us */}
-        <About onOpenBooking={handleOpenBooking} />
-
-        {/* Our Services */}
-        <Services onSelectService={handleBookStyle} />
-
-        {/* Interactive Concept Visualizer / Moodboards */}
-        <MoodboardVisualizer onSelectConcept={handleBookStyle} />
-
-        {/* Portfolio / Previous Works */}
-        <Portfolio onBookStyle={handleBookStyle} />
-
-        {/* Why Choose Us */}
-        <WhyChooseUs onOpenBooking={handleOpenBooking} />
-
-        {/* Our Process */}
-        <Process onOpenBooking={handleOpenBooking} />
-
-        {/* Testimonials */}
+      <main className="flex-1">
+        <Hero />
+        <Services onViewCategory={handleViewCategory} />
+        <Portfolio
+          category={category}
+          onCategoryChange={setCategory}
+          onAskAbout={handleAskAbout}
+        />
+        <About />
+        <Process />
         <Testimonials />
-
-        {/* Contact and Booking Section */}
-        <BookingSection 
-          initialStyle={selectedStyle} 
-          onCloseStyle={() => setSelectedStyle('')} 
+        <BookingSection
+          selectedStyle={selectedStyle}
+          onClearStyle={() => setSelectedStyle('')}
         />
       </main>
 
-      {/* Footer */}
-      <Footer onOpenBooking={handleOpenBooking} />
-
-      {/* Floating WhatsApp Quick Action */}
+      <Footer />
       <WhatsAppFloating />
     </div>
   );

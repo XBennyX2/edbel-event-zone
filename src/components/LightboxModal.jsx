@@ -1,173 +1,113 @@
-import React, { useEffect } from 'react';
-import { X, ChevronLeft, ChevronRight, Sparkles, Tag, ArrowRight, Share2, ZoomIn, ZoomOut } from 'lucide-react';
+import React, { useEffect, useRef } from 'react';
+import { ChevronLeft, ChevronRight, MessageCircle, X } from 'lucide-react';
+import { whatsappLink } from '../data/contact';
 
-export default function LightboxModal({ 
-  event, 
-  onClose, 
-  onNext, 
-  onPrev, 
-  onBookStyle,
-  currentIndex,
-  totalCount 
+export default function LightboxModal({
+  photo,
+  position,
+  total,
+  onClose,
+  onNext,
+  onPrev,
+  onAskAbout,
 }) {
-  const [isZoomed, setIsZoomed] = React.useState(false);
+  const closeRef = useRef(null);
+
+  // Keep the latest handlers in a ref so the key listener is attached once.
+  const handlers = useRef({ onClose, onNext, onPrev });
+  handlers.current = { onClose, onNext, onPrev };
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') onClose();
-      if (e.key === 'ArrowRight') onNext();
-      if (e.key === 'ArrowLeft') onPrev();
+      if (e.key === 'Escape') handlers.current.onClose();
+      if (e.key === 'ArrowRight') handlers.current.onNext();
+      if (e.key === 'ArrowLeft') handlers.current.onPrev();
     };
     window.addEventListener('keydown', handleKeyDown);
-    // Lock body scroll
+
+    const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
+    closeRef.current?.focus();
+
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = previousOverflow;
     };
-  }, [onClose, onNext, onPrev]);
+  }, []);
 
-  if (!event) return null;
+  const navButton =
+    'absolute top-1/2 -translate-y-1/2 rounded-full bg-paper/90 p-2.5 text-ink shadow transition-colors hover:bg-paper';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-noir-950/95 backdrop-blur-xl animate-fade-in p-2 sm:p-4 md:p-6">
-      
-      {/* Top Bar with counter & close button */}
-      <div className="absolute top-4 left-4 right-4 z-50 flex items-center justify-between pointer-events-auto">
-        <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-noir-900/90 border border-white/10 text-xs text-stone-300 backdrop-blur-md">
-          <span className="text-brand-300 font-bold">{currentIndex + 1}</span>
-          <span className="text-stone-500">/</span>
-          <span>{totalCount}</span>
-          <span className="text-stone-600 hidden sm:inline">•</span>
-          <span className="text-stone-400 hidden sm:inline capitalize">{event.categoryLabel}</span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setIsZoomed(!isZoomed)}
-            className="p-2.5 rounded-full bg-noir-900/90 border border-white/10 text-stone-300 hover:text-white hover:border-brand-500/50 backdrop-blur-md transition-all hidden sm:flex items-center justify-center"
-            title={isZoomed ? "Zoom Out" : "Zoom In"}
-          >
-            {isZoomed ? <ZoomOut className="w-4 h-4" /> : <ZoomIn className="w-4 h-4" />}
-          </button>
-
-          <button
-            onClick={onClose}
-            className="p-2.5 rounded-full bg-noir-900/90 border border-white/10 text-stone-300 hover:text-white hover:border-brand-500/50 hover:bg-noir-850 backdrop-blur-md transition-all flex items-center justify-center"
-            aria-label="Close modal"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-      </div>
-
-      {/* Navigation Buttons (Left / Right) */}
-      <button
-        onClick={onPrev}
-        className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 z-40 p-3 sm:p-4 rounded-full bg-noir-900/80 border border-white/10 text-stone-200 hover:text-brand-300 hover:border-brand-400 hover:bg-noir-900 backdrop-blur-md transition-all"
-        aria-label="Previous Image"
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/80 p-3 sm:p-6"
+      role="dialog"
+      aria-modal="true"
+      aria-label={photo.title}
+      onClick={onClose}
+    >
+      <div
+        className="flex max-h-full w-full max-w-5xl flex-col overflow-hidden rounded-xl bg-paper lg:flex-row"
+        onClick={(e) => e.stopPropagation()}
       >
-        <ChevronLeft className="w-6 h-6" />
-      </button>
-
-      <button
-        onClick={onNext}
-        className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 z-40 p-3 sm:p-4 rounded-full bg-noir-900/80 border border-white/10 text-stone-200 hover:text-brand-300 hover:border-brand-400 hover:bg-noir-900 backdrop-blur-md transition-all"
-        aria-label="Next Image"
-      >
-        <ChevronRight className="w-6 h-6" />
-      </button>
-
-      {/* Main Container: Image + Info Drawer */}
-      <div className="w-full max-w-6xl max-h-[92vh] flex flex-col lg:flex-row rounded-3xl overflow-hidden bg-noir-900 border border-white/10 shadow-2xl z-30">
-        
-        {/* Left Side: Image Display */}
-        <div 
-          className="flex-1 relative flex items-center justify-center bg-noir-950 p-2 sm:p-6 overflow-hidden min-h-[350px] lg:min-h-[580px] cursor-pointer"
-          onClick={() => setIsZoomed(!isZoomed)}
-        >
+        <div className="relative flex min-h-0 flex-1 items-center justify-center bg-ink">
           <img
-            src={event.image}
-            alt={event.title}
-            className={`max-h-[55vh] lg:max-h-[82vh] w-auto max-w-full object-contain rounded-xl transition-transform duration-300 ${
-              isZoomed ? 'scale-125 cursor-zoom-out' : 'scale-100 cursor-zoom-in'
-            }`}
+            src={photo.image}
+            alt={photo.title}
+            className="max-h-[52vh] w-auto max-w-full object-contain lg:max-h-[86vh]"
           />
+          <button type="button" onClick={onPrev} className={`${navButton} left-3`} aria-label="Previous photo">
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <button type="button" onClick={onNext} className={`${navButton} right-3`} aria-label="Next photo">
+            <ChevronRight className="h-5 w-5" />
+          </button>
         </div>
 
-        {/* Right Side: Detailed Event Information */}
-        <div className="w-full lg:w-96 p-6 sm:p-8 flex flex-col justify-between border-t lg:border-t-0 lg:border-l border-white/10 bg-noir-900/95 overflow-y-auto max-h-[40vh] lg:max-h-[82vh]">
-          <div>
-            {/* Category Badge */}
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/30 text-brand-300 text-xs font-semibold uppercase tracking-wider mb-3">
-              <Sparkles className="w-3.5 h-3.5 text-brand-400" />
-              <span>{event.categoryLabel}</span>
-            </div>
-
-            {/* Event Title */}
-            <h3 className="font-serif text-xl sm:text-2xl font-bold text-white mb-2 leading-snug">
-              {event.title}
-            </h3>
-
-            {/* Amharic Title */}
-            <p className="font-amharic text-sm sm:text-base text-brand-300/90 font-medium mb-4">
-              {event.amharicTitle}
+        <div className="flex w-full shrink-0 flex-col overflow-y-auto p-6 lg:w-80 lg:p-7">
+          <div className="flex items-start justify-between gap-4">
+            <p className="text-sm text-muted">
+              {photo.categoryLabel} · {position} of {total}
             </p>
-
-            {/* Verified Description */}
-            <p className="text-stone-300 text-xs sm:text-sm leading-relaxed mb-6">
-              {event.description}
-            </p>
-
-            {/* Tags */}
-            <div className="mb-6">
-              <div className="text-[11px] uppercase tracking-wider text-stone-400 font-semibold mb-2 flex items-center gap-1.5">
-                <Tag className="w-3.5 h-3.5 text-brand-400" />
-                <span>Design Elements</span>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {event.tags.map((tag, tIdx) => (
-                  <span
-                    key={tIdx}
-                    className="text-[11px] px-2.5 py-0.5 rounded-md bg-noir-800 text-stone-300 border border-white/5"
-                  >
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Authenticity Hallmark */}
-            <div className="p-3 rounded-xl bg-noir-850 border border-white/5 text-[11px] text-stone-400 mb-6">
-              <span className="text-brand-300 font-semibold block mb-0.5">Verified Authentic Work</span>
-              Executed by Edbel Event Zone in Addis Ababa, Ethiopia.
-            </div>
+            <button
+              ref={closeRef}
+              type="button"
+              onClick={onClose}
+              className="-mr-2 -mt-2 rounded-full p-2 text-ink hover:bg-mist"
+              aria-label="Close"
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
 
-          {/* Action CTA: Inquire About This Style */}
-          <div className="pt-4 border-t border-white/10 flex flex-col gap-2">
-            <button
-              onClick={() => onBookStyle(event.title)}
-              className="w-full py-3.5 px-5 rounded-xl text-xs font-bold uppercase tracking-wider text-noir-950 bg-gradient-to-r from-brand-300 via-brand-400 to-brand-500 hover:brightness-110 shadow-lg shadow-brand-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
-            >
-              <span>Inquire This Exact Look</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
+          <h3 className="mt-2 text-xl leading-snug">{photo.title}</h3>
+          <p lang="am" className="mt-1 font-amharic text-sm text-gold-deep">
+            {photo.amharicTitle}
+          </p>
+          <p className="mt-3 text-base">{photo.description}</p>
 
+          <div className="mt-6 flex flex-col gap-2.5 lg:mt-auto lg:pt-6">
+            <button
+              type="button"
+              onClick={() => onAskAbout(photo.title)}
+              className="btn btn-primary"
+            >
+              Ask about this look
+            </button>
             <a
-              href={`https://wa.me/251913904484?text=Hello%20Edbel%20Event%20Zone,%20I%20love%20the%20setup:%20"${encodeURIComponent(event.title)}"%20and%20would%20like%20to%20know%20availability%20and%20pricing.`}
+              href={whatsappLink(
+                `Hello Edbel Event Zone, I like this setup: "${photo.title}". Could you tell me about availability and pricing?`
+              )}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold text-center text-stone-300 hover:text-white bg-noir-850 hover:bg-noir-800 border border-white/10 transition-colors"
+              className="btn btn-secondary"
             >
-              WhatsApp About This Decor
+              <MessageCircle className="h-4 w-4" />
+              Ask on WhatsApp
             </a>
           </div>
-
         </div>
-
       </div>
-
     </div>
   );
 }

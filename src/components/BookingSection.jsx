@@ -1,489 +1,312 @@
-import React, { useState, useEffect } from 'react';
-import confetti from 'canvas-confetti';
-import { 
-  Phone, 
-  MapPin, 
-  MessageCircle, 
-  CheckCircle2, 
-  Clock, 
-  Send, 
-  Copy, 
-  Check, 
-  AlertCircle,
-  ArrowUpRight
-} from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { AlertCircle, CheckCircle2, Clock, MapPin, MessageCircle, Phone } from 'lucide-react';
 import FacebookIcon from './icons/FacebookIcon';
+import {
+  FACEBOOK_URL,
+  PHONE_ALT_DISPLAY,
+  PHONE_DISPLAY,
+  PHONE_HREF,
+  whatsappLink,
+} from '../data/contact';
 
 const EVENT_TYPES = [
-  'Grand Wedding & Ballroom Production',
-  'Traditional Engagement (ሽምግልና & ቀለበት)',
-  'Romantic Proposal ("Will You Marry Me?")',
-  'Christening & Baptism Celebration (ክርስትና)',
-  'Milestone Birthday & Themed Party',
-  'Luxury Marquee Tent & Outdoor Pavilion',
-  'Academic Graduation & Celebration',
-  'Corporate Gala Dinner & VIP Banquet'
+  'Wedding',
+  'Engagement (ሽምግልና & ቀለበት)',
+  'Proposal',
+  'Christening (ክርስትና)',
+  'Birthday',
+  'Tent or outdoor event',
+  'Graduation',
+  'Company event or gala dinner',
+  'Something else',
 ];
 
-export default function BookingSection({ initialStyle, onCloseStyle }) {
-  const [formData, setFormData] = useState({
-    name: '',
-    phone: '',
-    email: '',
-    eventType: 'Grand Wedding & Ballroom Production',
-    eventDate: '',
-    location: '',
-    estimatedBudget: 'Consultation & Custom Scope',
-    notes: ''
-  });
+const EMPTY_FORM = {
+  name: '',
+  phone: '',
+  eventType: EVENT_TYPES[0],
+  eventDate: '',
+  location: '',
+  notes: '',
+};
 
+function buildMessage(form, selectedStyle) {
+  const lines = [
+    'Hello Edbel Event Zone, I would like a quote for an event.',
+    '',
+    `Name: ${form.name.trim()}`,
+    `Phone: ${form.phone.trim()}`,
+    `Event: ${form.eventType}`,
+  ];
+  if (form.eventDate) lines.push(`Date: ${form.eventDate}`);
+  if (form.location.trim()) lines.push(`Venue or area: ${form.location.trim()}`);
+  if (selectedStyle) lines.push(`Look I like: ${selectedStyle}`);
+  if (form.notes.trim()) lines.push(`Details: ${form.notes.trim()}`);
+  return lines.join('\n');
+}
+
+function ContactRow({ icon: Icon, label, children }) {
+  return (
+    <div className="flex gap-4">
+      <Icon className="mt-1 h-5 w-5 shrink-0 text-leaf" aria-hidden="true" />
+      <div>
+        <dt className="text-sm text-muted">{label}</dt>
+        <dd className="text-ink">{children}</dd>
+      </div>
+    </div>
+  );
+}
+
+export default function BookingSection({ selectedStyle, onClearStyle }) {
+  const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [referenceId, setReferenceId] = useState('');
+  const [sentLink, setSentLink] = useState('');
 
+  // A newly chosen look means a new request, so show the form again.
   useEffect(() => {
-    if (initialStyle) {
-      setFormData(prev => ({
-        ...prev,
-        notes: prev.notes ? `${prev.notes}\nSelected Style: ${initialStyle}` : `Selected Style: ${initialStyle}`,
-      }));
-    }
-  }, [initialStyle]);
+    if (selectedStyle) setSentLink('');
+  }, [selectedStyle]);
 
-  const validate = () => {
-    const errs = {};
-    if (!formData.name.trim()) errs.name = 'Please provide your full name.';
-    if (!formData.phone.trim()) {
-      errs.phone = 'Please provide your telephone number.';
-    } else if (formData.phone.trim().length < 8) {
-      errs.phone = 'Please enter a valid telephone number.';
-    }
-    if (!formData.eventDate) errs.eventDate = 'Please select your target celebration date.';
-    if (!formData.location.trim()) errs.location = 'Please state your intended venue or area in Addis Ababa.';
-    
-    setErrors(errs);
-    return Object.keys(errs).length === 0;
+  const update = (field) => (e) => {
+    setForm((current) => ({ ...current, [field]: e.target.value }));
+    if (errors[field]) setErrors((current) => ({ ...current, [field]: undefined }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!validate()) return;
 
-    const ref = `EDB-${Date.now().toString().slice(-6)}`;
-    setReferenceId(ref);
+    const found = {};
+    if (!form.name.trim()) found.name = 'Please enter your name.';
+    if (!form.phone.trim()) {
+      found.phone = 'Please enter your phone number.';
+    } else if (form.phone.replace(/\D/g, '').length < 9) {
+      found.phone = 'That number looks too short. Please check it.';
+    }
+    setErrors(found);
+    if (Object.keys(found).length > 0) return;
 
-    const savedInquiries = JSON.parse(localStorage.getItem('edbel_inquiries') || '[]');
-    savedInquiries.push({ ...formData, referenceId: ref, timestamp: new Date().toISOString() });
-    localStorage.setItem('edbel_inquiries', JSON.stringify(savedInquiries));
-
-    try {
-      confetti({
-        particleCount: 70,
-        spread: 60,
-        origin: { y: 0.6 },
-        colors: ['#C29B38', '#E4CA7E', '#FAF9F5', '#836316']
-      });
-    } catch (e) {}
-
-    setIsSubmitted(true);
+    // The site has no server, so the request is sent as a WhatsApp message.
+    const link = whatsappLink(buildMessage(form, selectedStyle));
+    window.open(link, '_blank', 'noopener,noreferrer');
+    setSentLink(link);
   };
 
-  const generateWhatsAppMessage = () => {
-    return encodeURIComponent(
-      `Hello Edbel Event Zone,\n\nI would like to schedule an event consultation (Ref: ${referenceId || 'New'}):\n` +
-      `• Name: ${formData.name}\n` +
-      `• Phone: ${formData.phone}\n` +
-      `• Email: ${formData.email || 'N/A'}\n` +
-      `• Event Type: ${formData.eventType}\n` +
-      `• Preferred Date: ${formData.eventDate}\n` +
-      `• Venue/Location: ${formData.location}\n` +
-      `• Budget Tier: ${formData.estimatedBudget}\n` +
-      `• Notes: ${formData.notes || 'None'}\n\n` +
-      `Thank you!`
-    );
-  };
-
-  const copyToClipboard = () => {
-    const rawText = 
-      `Edbel Event Zone Consultation Request (Ref: ${referenceId}):\n` +
-      `Name: ${formData.name}\n` +
-      `Phone: ${formData.phone}\n` +
-      `Email: ${formData.email || 'N/A'}\n` +
-      `Event Type: ${formData.eventType}\n` +
-      `Date: ${formData.eventDate}\n` +
-      `Venue: ${formData.location}\n` +
-      `Budget: ${formData.estimatedBudget}\n` +
-      `Notes: ${formData.notes || 'None'}`;
-    
-    navigator.clipboard.writeText(rawText);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
-  };
+  const today = new Date().toISOString().slice(0, 10);
 
   return (
-    <section id="contact" className="py-28 bg-[#090A0C] border-t border-white/5 relative">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {/* Editorial Section Eyebrow */}
-        <div className="flex items-center gap-3 mb-6">
-          <span className="w-8 h-[1px] bg-brass-500" />
-          <span className="text-xs uppercase tracking-[0.2em] font-medium text-brass-400">
-            Consultation & Reservations
-          </span>
-          <span className="text-stone-500">•</span>
-          <span className="text-xs font-amharic text-stone-300">
-            ቀንዎን ያስይዙ እና ይወያዩ
-          </span>
-        </div>
-
-        {/* Section Heading */}
-        <div className="max-w-3xl mb-16">
-          <h2 className="font-serif text-3xl sm:text-5xl md:text-6xl font-normal text-white leading-[1.12] mb-4">
-            Initiate Your Celebration Brief
-          </h2>
-          <p className="text-stone-300 text-sm sm:text-base leading-relaxed">
-            Reach out directly or submit your event parameters below. Our senior design team will evaluate your date, inventory requirements, and venue possibilities.
+    <section id="contact" className="section bg-mist">
+      <div className="page grid gap-12 lg:grid-cols-[5fr_7fr] lg:gap-16">
+        <div>
+          <h2 className="section-title">Get a quote</h2>
+          <p className="section-lead">
+            Tell us about your event and we will reply with ideas and a price.
+            For weddings and holiday weekends, try to contact us 4 to 8 weeks
+            ahead.
           </p>
+
+          <dl className="mt-10 space-y-6">
+            <ContactRow icon={Phone} label="Phone">
+              <a href={PHONE_HREF} className="font-medium hover:text-leaf">
+                {PHONE_DISPLAY}
+              </a>
+              <span className="block text-base text-body">or {PHONE_ALT_DISPLAY}</span>
+            </ContactRow>
+
+            <ContactRow icon={MessageCircle} label="WhatsApp">
+              <a
+                href={whatsappLink()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium hover:text-leaf"
+              >
+                Chat with us on WhatsApp
+              </a>
+            </ContactRow>
+
+            <ContactRow icon={MapPin} label="Location">
+              Bole, Addis Ababa
+              <span className="block text-base text-body">
+                We set up across Addis Ababa and nearby areas.
+              </span>
+            </ContactRow>
+
+            <ContactRow icon={Clock} label="Hours">
+              Every day, 8:30 AM to 8:00 PM
+            </ContactRow>
+
+            <ContactRow icon={FacebookIcon} label="Facebook">
+              <a
+                href={FACEBOOK_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium hover:text-leaf"
+              >
+                facebook.com/EdbelEventZone
+              </a>
+            </ContactRow>
+          </dl>
         </div>
 
-        {/* Style Tag Alert if selected from gallery */}
-        {initialStyle && (
-          <div className="mb-10 p-4 rounded-xl bg-[#12151B] brass-border flex items-center justify-between">
-            <span className="text-xs text-stone-300">
-              Inquiring regarding style: <strong className="text-white">"{initialStyle}"</strong>
-            </span>
-            {onCloseStyle && (
-              <button 
-                onClick={onCloseStyle}
-                className="text-xs text-stone-400 hover:text-white underline"
-              >
-                Clear
-              </button>
-            )}
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-          
-          {/* Left Column: Verified Atelier Contact Details (5 cols) */}
-          <div className="lg:col-span-5 flex flex-col gap-6">
-            
-            <div className="editorial-panel p-8 rounded-2xl hairline-border">
-              <div className="flex items-center gap-4 mb-6 pb-6 border-b border-white/10">
-                <div className="w-12 h-12 rounded-full bg-[#161922] p-1.5 flex items-center justify-center shrink-0">
-                  <img 
-                    src="/assets/images/branding/edbel-logo-mark.png" 
-                    alt="Edbel Logo" 
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-                <div>
-                  <h3 className="font-serif text-xl font-medium text-white">Edbel Event Zone</h3>
-                  <p className="font-amharic text-xs text-brass-400">ኤድቤል ኢቨንት ዞን • ቦሌ፣ አዲስ አበባ</p>
-                </div>
-              </div>
-
-              <div className="space-y-6 text-xs sm:text-sm">
-                <div>
-                  <span className="text-[10px] uppercase tracking-wider text-stone-400 block font-semibold mb-1">
-                    Telephone & Direct Line
-                  </span>
-                  <a href="tel:+251913904484" className="text-white hover:text-brass-300 font-semibold block text-base transition-colors">
-                    +251 91 390 4484
-                  </a>
-                  <span className="text-xs text-stone-400">Alternate: +251 98 034 8026</span>
-                </div>
-
-                <div>
-                  <span className="text-[10px] uppercase tracking-wider text-stone-400 block font-semibold mb-1">
-                    WhatsApp Direct Inquiry
-                  </span>
-                  <a 
-                    href="https://wa.me/251913904484" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-emerald-400 hover:text-emerald-300 font-medium flex items-center gap-1.5 transition-colors"
-                  >
-                    <MessageCircle className="w-4 h-4" />
-                    <span>+251 91 390 4484 (Instant Chat)</span>
-                  </a>
-                </div>
-
-                <div>
-                  <span className="text-[10px] uppercase tracking-wider text-stone-400 block font-semibold mb-1">
-                    Atelier Location
-                  </span>
-                  <span className="text-white font-medium block">Bole, Addis Ababa, Ethiopia</span>
-                  <span className="text-xs text-stone-400">Full venue staging across Addis Ababa & surrounding regions</span>
-                </div>
-
-                <div>
-                  <span className="text-[10px] uppercase tracking-wider text-stone-400 block font-semibold mb-1">
-                    Consultation Hours
-                  </span>
-                  <span className="text-white block">Monday – Sunday</span>
-                  <span className="text-xs text-stone-400">8:30 AM – 8:00 PM (EAT)</span>
-                </div>
-
-                <div className="pt-4 border-t border-white/10">
-                  <span className="text-[10px] uppercase tracking-wider text-stone-400 block font-semibold mb-1">
-                    Official Facebook
-                  </span>
-                  <a 
-                    href="https://web.facebook.com/EdbelEventZone/" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-stone-300 hover:text-white flex items-center gap-1.5 transition-colors"
-                  >
-                    <FacebookIcon className="w-4 h-4 text-blue-400" />
-                    <span>facebook.com/EdbelEventZone</span>
-                    <ArrowUpRight className="w-3.5 h-3.5" />
-                  </a>
-                </div>
+        <div className="rounded-xl border border-line bg-paper p-6 sm:p-9">
+          {sentLink ? (
+            <div className="py-6 text-center" role="status">
+              <CheckCircle2 className="mx-auto h-11 w-11 text-leaf" aria-hidden="true" />
+              <h3 className="mt-4 text-2xl">Your message is ready in WhatsApp</h3>
+              <p className="mx-auto mt-2 max-w-sm">
+                Press send in WhatsApp to deliver it. We will reply there or
+                call you back.
+              </p>
+              <div className="mt-7 flex flex-col items-center gap-4">
+                <a
+                  href={sentLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-whatsapp"
+                >
+                  <MessageCircle className="h-5 w-5" />
+                  Open WhatsApp again
+                </a>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setForm(EMPTY_FORM);
+                    setSentLink('');
+                    onClearStyle();
+                  }}
+                  className="text-base text-body underline underline-offset-4 hover:text-ink"
+                >
+                  Start a new request
+                </button>
               </div>
             </div>
-
-            <div className="p-5 rounded-xl bg-[#0D0F13] border border-white/5 text-xs text-stone-400 leading-relaxed">
-              <strong className="text-stone-300 block mb-1">Seasonal Notice:</strong>
-              Wedding seasons and holiday weekends require advance reservation. We recommend reaching out 4–8 weeks ahead.
-            </div>
-
-          </div>
-
-          {/* Right Column: Clean Consultation Form (7 cols) */}
-          <div className="lg:col-span-7">
-            <div className="editorial-panel p-8 sm:p-10 rounded-2xl hairline-border">
-              
-              {isSubmitted ? (
-                <div className="text-center py-10">
-                  <div className="w-14 h-14 rounded-full bg-emerald-500/20 border border-emerald-400 flex items-center justify-center text-emerald-400 mx-auto mb-4">
-                    <CheckCircle2 className="w-7 h-7" />
-                  </div>
-
-                  <span className="text-[10px] font-mono uppercase tracking-widest text-brass-400 block mb-1">
-                    Inquiry Registered
+          ) : (
+            <form onSubmit={handleSubmit} noValidate className="space-y-5">
+              {selectedStyle && (
+                <div className="flex items-start justify-between gap-4 rounded-lg bg-leaf-soft px-4 py-3 text-base text-ink">
+                  <span>
+                    Asking about: <span className="font-medium">{selectedStyle}</span>
                   </span>
-
-                  <h3 className="font-serif text-2xl sm:text-3xl font-medium text-white mb-2">
-                    Thank You, {formData.name}
-                  </h3>
-
-                  <p className="text-xs font-mono text-stone-400 mb-6">
-                    Reference ID: <strong className="text-white">{referenceId}</strong>
-                  </p>
-
-                  <p className="text-stone-300 text-sm max-w-md mx-auto leading-relaxed mb-8">
-                    Your event parameters are ready. To receive an immediate review from our director, click below to open your structured brief directly on WhatsApp.
-                  </p>
-
-                  <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-8">
-                    <a
-                      href={`https://wa.me/251913904484?text=${generateWhatsAppMessage()}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full sm:w-auto px-6 py-3.5 rounded-full text-xs font-semibold uppercase tracking-wider text-black bg-emerald-400 hover:bg-emerald-300 transition-colors flex items-center justify-center gap-2"
-                    >
-                      <MessageCircle className="w-4 h-4" />
-                      <span>Send to WhatsApp (+251913904484)</span>
-                    </a>
-
-                    <button
-                      onClick={copyToClipboard}
-                      className="w-full sm:w-auto px-5 py-3.5 rounded-full text-xs font-semibold text-stone-300 hover:text-white bg-[#12151B] border border-white/10 transition-colors flex items-center justify-center gap-1.5"
-                    >
-                      {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                      <span>{copied ? 'Copied' : 'Copy Brief'}</span>
-                    </button>
-                  </div>
-
                   <button
-                    onClick={() => {
-                      setIsSubmitted(false);
-                      setFormData({
-                        name: '',
-                        phone: '',
-                        email: '',
-                        eventType: 'Grand Wedding & Ballroom Production',
-                        eventDate: '',
-                        location: '',
-                        estimatedBudget: 'Consultation & Custom Scope',
-                        notes: ''
-                      });
-                    }}
-                    className="text-xs text-stone-400 hover:text-white underline transition-colors"
+                    type="button"
+                    onClick={onClearStyle}
+                    className="shrink-0 underline underline-offset-4 hover:text-leaf"
                   >
-                    Submit Another Inquiry
+                    Remove
                   </button>
                 </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    <div>
-                      <label className="block text-xs uppercase tracking-wider text-stone-300 font-medium mb-2">
-                        Full Name <span className="text-brass-400">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        placeholder="Your full name"
-                        className={`w-full px-4 py-3 rounded-xl bg-[#08090C] border text-sm text-white placeholder:text-stone-600 focus:outline-none transition-colors ${
-                          errors.name ? 'border-rose-500' : 'border-white/10 focus:border-brass-500'
-                        }`}
-                      />
-                      {errors.name && (
-                        <p className="text-[11px] text-rose-400 mt-1 flex items-center gap-1">
-                          <AlertCircle className="w-3 h-3" />
-                          <span>{errors.name}</span>
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-xs uppercase tracking-wider text-stone-300 font-medium mb-2">
-                        Telephone <span className="text-brass-400">*</span>
-                      </label>
-                      <input
-                        type="tel"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        placeholder="+251 9... or 09..."
-                        className={`w-full px-4 py-3 rounded-xl bg-[#08090C] border text-sm text-white placeholder:text-stone-600 focus:outline-none transition-colors ${
-                          errors.phone ? 'border-rose-500' : 'border-white/10 focus:border-brass-500'
-                        }`}
-                      />
-                      {errors.phone && (
-                        <p className="text-[11px] text-rose-400 mt-1 flex items-center gap-1">
-                          <AlertCircle className="w-3 h-3" />
-                          <span>{errors.phone}</span>
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    <div>
-                      <label className="block text-xs uppercase tracking-wider text-stone-300 font-medium mb-2">
-                        Email Address <span className="text-stone-500">(Optional)</span>
-                      </label>
-                      <input
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        placeholder="name@domain.com"
-                        className="w-full px-4 py-3 rounded-xl bg-[#08090C] border border-white/10 focus:border-brass-500 text-sm text-white placeholder:text-stone-600 focus:outline-none transition-colors"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs uppercase tracking-wider text-stone-300 font-medium mb-2">
-                        Event Discipline <span className="text-brass-400">*</span>
-                      </label>
-                      <select
-                        value={formData.eventType}
-                        onChange={(e) => setFormData({ ...formData, eventType: e.target.value })}
-                        className="w-full px-4 py-3 rounded-xl bg-[#08090C] border border-white/10 focus:border-brass-500 text-sm text-white focus:outline-none transition-colors"
-                      >
-                        {EVENT_TYPES.map((type) => (
-                          <option key={type} value={type} className="bg-[#0C0E12] text-white">
-                            {type}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    <div>
-                      <label className="block text-xs uppercase tracking-wider text-stone-300 font-medium mb-2">
-                        Celebration Date <span className="text-brass-400">*</span>
-                      </label>
-                      <input
-                        type="date"
-                        value={formData.eventDate}
-                        onChange={(e) => setFormData({ ...formData, eventDate: e.target.value })}
-                        className={`w-full px-4 py-3 rounded-xl bg-[#08090C] border text-sm text-white focus:outline-none transition-colors ${
-                          errors.eventDate ? 'border-rose-500' : 'border-white/10 focus:border-brass-500'
-                        }`}
-                      />
-                      {errors.eventDate && (
-                        <p className="text-[11px] text-rose-400 mt-1 flex items-center gap-1">
-                          <AlertCircle className="w-3 h-3" />
-                          <span>{errors.eventDate}</span>
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-xs uppercase tracking-wider text-stone-300 font-medium mb-2">
-                        Venue / Target Area <span className="text-brass-400">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.location}
-                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                        placeholder="e.g. Skylight Hotel, Bole Residence"
-                        className={`w-full px-4 py-3 rounded-xl bg-[#08090C] border text-sm text-white placeholder:text-stone-600 focus:outline-none transition-colors ${
-                          errors.location ? 'border-rose-500' : 'border-white/10 focus:border-brass-500'
-                        }`}
-                      />
-                      {errors.location && (
-                        <p className="text-[11px] text-rose-400 mt-1 flex items-center gap-1">
-                          <AlertCircle className="w-3 h-3" />
-                          <span>{errors.location}</span>
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs uppercase tracking-wider text-stone-300 font-medium mb-2">
-                      Estimated Production Scale <span className="text-stone-500">(Optional)</span>
-                    </label>
-                    <select
-                      value={formData.estimatedBudget}
-                      onChange={(e) => setFormData({ ...formData, estimatedBudget: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl bg-[#08090C] border border-white/10 focus:border-brass-500 text-sm text-white focus:outline-none transition-colors"
-                    >
-                      <option value="Consultation & Custom Scope">Consultation & Custom Scope</option>
-                      <option value="Intimate Setting (Proposals, Small Dinners)">Intimate Setting (Proposals, Small Dinners)</option>
-                      <option value="Mid-Scale Production (Shimgilna, Christenings, Birthdays)">Mid-Scale Production (Shimgilna, Christenings, Birthdays)</option>
-                      <option value="Grand Ballroom & Marquee Pavilion Scale">Grand Ballroom & Marquee Pavilion Scale</option>
-                      <option value="Multi-Day Royal Wedding Production">Multi-Day Royal Wedding Production</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs uppercase tracking-wider text-stone-300 font-medium mb-2">
-                      Specific Notes or Theme Inquiries
-                    </label>
-                    <textarea
-                      rows={3}
-                      value={formData.notes}
-                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                      placeholder="Specify requested floral tones, neon sign lettering, guest count, or venue layout preferences..."
-                      className="w-full px-4 py-3 rounded-xl bg-[#08090C] border border-white/10 focus:border-brass-500 text-sm text-white placeholder:text-stone-600 focus:outline-none transition-colors"
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="w-full py-4 px-6 rounded-full text-xs font-semibold uppercase tracking-wider text-black bg-[#C29B38] hover:bg-[#D4B35E] transition-all flex items-center justify-center gap-2"
-                  >
-                    <span>Register Consultation Brief</span>
-                    <ArrowUpRight className="w-4 h-4" />
-                  </button>
-
-                </form>
               )}
 
-            </div>
-          </div>
+              <div className="grid gap-5 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="quote-name" className="field-label">Your name</label>
+                  <input
+                    id="quote-name"
+                    type="text"
+                    autoComplete="name"
+                    value={form.name}
+                    onChange={update('name')}
+                    aria-invalid={Boolean(errors.name)}
+                    aria-describedby={errors.name ? 'quote-name-error' : undefined}
+                    className={`field ${errors.name ? 'border-red-600' : ''}`}
+                  />
+                  {errors.name && (
+                    <p id="quote-name-error" className="mt-1.5 flex items-center gap-1.5 text-sm text-red-700">
+                      <AlertCircle className="h-4 w-4" />
+                      {errors.name}
+                    </p>
+                  )}
+                </div>
 
+                <div>
+                  <label htmlFor="quote-phone" className="field-label">Phone number</label>
+                  <input
+                    id="quote-phone"
+                    type="tel"
+                    autoComplete="tel"
+                    value={form.phone}
+                    onChange={update('phone')}
+                    placeholder="09..."
+                    aria-invalid={Boolean(errors.phone)}
+                    aria-describedby={errors.phone ? 'quote-phone-error' : undefined}
+                    className={`field ${errors.phone ? 'border-red-600' : ''}`}
+                  />
+                  {errors.phone && (
+                    <p id="quote-phone-error" className="mt-1.5 flex items-center gap-1.5 text-sm text-red-700">
+                      <AlertCircle className="h-4 w-4" />
+                      {errors.phone}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid gap-5 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="quote-type" className="field-label">Type of event</label>
+                  <select
+                    id="quote-type"
+                    value={form.eventType}
+                    onChange={update('eventType')}
+                    className="field"
+                  >
+                    {EVENT_TYPES.map((type) => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="quote-date" className="field-label">
+                    Event date <span className="font-normal text-muted">(if you know it)</span>
+                  </label>
+                  <input
+                    id="quote-date"
+                    type="date"
+                    min={today}
+                    value={form.eventDate}
+                    onChange={update('eventDate')}
+                    className="field"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="quote-location" className="field-label">
+                  Venue or area <span className="font-normal text-muted">(optional)</span>
+                </label>
+                <input
+                  id="quote-location"
+                  type="text"
+                  value={form.location}
+                  onChange={update('location')}
+                  placeholder="For example: Skylight Hotel, or our home in Bole"
+                  className="field"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="quote-notes" className="field-label">
+                  Anything else we should know? <span className="font-normal text-muted">(optional)</span>
+                </label>
+                <textarea
+                  id="quote-notes"
+                  rows={4}
+                  value={form.notes}
+                  onChange={update('notes')}
+                  placeholder="Number of guests, colors you like, a sign you want..."
+                  className="field"
+                />
+              </div>
+
+              <button type="submit" className="btn btn-whatsapp w-full">
+                <MessageCircle className="h-5 w-5" />
+                Send on WhatsApp
+              </button>
+              <p className="text-center text-sm text-muted">
+                This opens WhatsApp with your details filled in. Nothing is sent until you press send there.
+              </p>
+            </form>
+          )}
         </div>
-
       </div>
     </section>
   );
